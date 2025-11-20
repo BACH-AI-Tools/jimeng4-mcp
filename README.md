@@ -1,9 +1,9 @@
-# 即梦AI多模态MCP (jimeng4.0-mcp-steve)
+# 即梦AI多模态MCP (jimeng4-mcp)
 
 这是一个基于火山引擎即梦AI的多模态生成服务，完整支持即梦4.0、图生图3.0、文生图3.1/3.0等所有最新模型，可通过MCP协议在Cursor、Claude Desktop等MCP客户端中使用，也可作为独立库调用。支持 macOS、Linux、Windows 及 WSL 环境。
 
-**作者**: jokerdpf  
-**包名**: jimeng4.0-mcp-steve
+**作者**: bachstudio  
+**包名**: jimeng4-mcp
 
 ## 版本更新
 
@@ -119,11 +119,11 @@ graph LR
 
 ```bash
 # NPM全局安装
-npm install -g jimeng4.0-mcp-steve
+npm install -g jimeng4-mcp
 
 # 或本地安装（开发）
 git clone <your-repo-url>
-cd jimeng4.0-mcp-steve
+cd jimeng4-mcp
 npm install
 npm run build
 ```
@@ -250,7 +250,7 @@ $env:JIMENG_SECRET_KEY = "你的火山引擎密钥"
       "command": "npx",
       "args": [
         "-y",
-        "jimeng4.0-mcp-steve"
+        "jimeng4-mcp"
       ],
       "env": {
         "JIMENG_ACCESS_KEY": "你的火山引擎访问密钥",
@@ -273,7 +273,7 @@ $env:JIMENG_SECRET_KEY = "你的火山引擎密钥"
       "command": "npx",
       "args": [
         "-y",
-        "jimeng4.0-mcp-steve"
+        "jimeng4-mcp"
       ],
       "env": {
         "JIMENG_ACCESS_KEY": "你的火山引擎访问密钥",
@@ -324,7 +324,7 @@ $env:JIMENG_SECRET_KEY = "你的火山引擎密钥"
       "command": "npx",
       "args": [
         "-y",
-        "jimeng4.0-mcp-steve"
+        "jimeng4-mcp"
       ],
       "env": {
         "JIMENG_ACCESS_KEY": "你的火山引擎访问密钥",
@@ -346,7 +346,7 @@ $env:JIMENG_SECRET_KEY = "你的火山引擎密钥"
       "command": "npx",
       "args": [
         "-y",
-        "jimeng4.0-mcp-steve"
+        "jimeng4-mcp"
       ],
       "env": {
         "JIMENG_ACCESS_KEY": "你的火山引擎访问密钥",
@@ -464,10 +464,10 @@ $env:JIMENG_SECRET_KEY = "你的火山引擎密钥"
 
 ### 1. 无法通过 npx 安装或运行
 
-如果遇到 `npx jimeng4.0-mcp-steve` 无法找到包的问题，请尝试：
+如果遇到 `npx jimeng4-mcp` 无法找到包的问题，请尝试：
 
 - 确认网络连接正常，能够访问 npm 仓库
-- 使用 `npm install -g jimeng4.0-mcp-steve` 先全局安装，再使用 `jimeng4.0-mcp-steve` 命令
+- 使用 `npm install -g jimeng4-mcp` 先全局安装，再使用 `jimeng4-mcp` 命令
 - 检查 Node.js 版本是否满足要求 (需要 v14.0.0 或更高版本)
 
 ### 2. 环境变量问题
@@ -497,7 +497,7 @@ $env:JIMENG_SECRET_KEY = "你的火山引擎密钥"
 ```bash
 # 克隆仓库
 git clone <your-repo-url>
-cd jimeng4.0-mcp-steve
+cd jimeng4-mcp
 
 # 安装依赖
 npm install
@@ -565,7 +565,7 @@ npm publish
 ### 基本用法
 
 ```typescript
-import { JimengClient } from 'jimeng4.0-mcp-steve';
+import { JimengClient } from 'jimeng4-mcp';
 
 // 创建客户端实例
 const client = new JimengClient({
@@ -680,19 +680,19 @@ async function generateImageToVideoAsync() {
 ```dockerfile
 FROM node:16-alpine
 
-RUN npm install -g jimeng4.0-mcp-steve
+RUN npm install -g jimeng4-mcp
 
 ENV JIMENG_ACCESS_KEY=你的火山引擎访问密钥
 ENV JIMENG_SECRET_KEY=你的火山引擎密钥
 
-CMD ["jimeng4.0-mcp-steve"]
+CMD ["jimeng4-mcp"]
 ```
 
 构建并运行：
 
 ```bash
-docker build -t jimeng4.0-mcp-steve .
-docker run -i --rm jimeng4.0-mcp-steve
+docker build -t jimeng4-mcp .
+docker run -i --rm jimeng4-mcp
 ```
 
 ## 开发指南

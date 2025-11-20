@@ -1,8 +1,8 @@
 {
-  "name": "jimeng4.0-mcp-steve",
-  "version": "1.0.7",
+  "name": "jimeng4-mcp",
+  "version": "1.0.9",
   "description": "火山引擎即梦AI多模态生成服务MCP工具 - 支持图像生成4.0、图生图3.0、文生图3.1/3.0及视频生成",
-  "author": "jokerdpf",
+  "author": "bachstudio",
   "license": "MIT",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
@@ -14,7 +14,7 @@
   "tools": [
     {
       "name": "jimeng-v40-generate",
-      "description": "即梦4.0图片生成工具，支持文生图、图像编辑及多图组合生成（最多10张输入图，最多15张输出图），支持4K超高清输出。此工具会等待图片生成完成后返回结果（同步方式）。",
+      "description": "当用户需要生成图片时使用的工具 - 即梦4.0图片生成工具，支持文生图、图像编辑及多图组合生成（最多10张输入图，最多15张输出图），支持4K超高清输出。此工具会等待图片生成完成后返回结果（同步方式）。",
       "parameters": {
         "type": "object",
         "properties": {
@@ -157,33 +157,6 @@
           }
         },
         "required": ["prompt"]
-      }
-    },
-    {
-      "name": "generate-image",
-      "description": "当用户需要生成图片时使用的工具（传统工具，推荐使用新版jimeng-v40-generate）",
-      "parameters": {
-        "type": "object",
-        "properties": {
-          "text": {
-            "type": "string",
-            "description": "用户需要在图片上显示的文字"
-          },
-          "illustration": {
-            "type": "string",
-            "description": "根据用户要显示的文字，提取3-5个可以作为图片配饰的插画元素关键词"
-          },
-          "color": {
-            "type": "string",
-            "description": "图片的背景主色调"
-          },
-          "ratio": {
-            "type": "string",
-            "enum": ["4:3", "3:4", "16:9", "9:16"],
-            "description": "图片比例。支持: 4:3 (512*384), 3:4 (384*512), 16:9 (512*288), 9:16 (288*512)"
-          }
-        },
-        "required": ["text", "illustration", "color", "ratio"]
       }
     }
   ],

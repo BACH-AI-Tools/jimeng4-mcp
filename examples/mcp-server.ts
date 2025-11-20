@@ -44,22 +44,9 @@ if (!JIMENG_ACCESS_KEY || !JIMENG_SECRET_KEY) {
   log("服务将启动但无法调用API功能，仅供测试使用");
 }
 
-// 图片比例映射
-const RATIO_MAPPING: Record<string, { width: number; height: number }> = {
-  "4:3": { width: 512, height: 384 },
-  "3:4": { width: 384, height: 512 },
-  "16:9": { width: 512, height: 288 },
-  "9:16": { width: 288, height: 512 }
-};
-
-// 生成组合后的prompt
-function generatePrompt(text: string, illustration: string, color: string): string {
-  return `字体设计："${text}"，黑色字体，斜体，带阴影。干净的背景，白色到${color}渐变。点缀浅灰色、半透明${illustration}等元素插图做配饰插画。`;
-}
-
 // 创建MCP服务器实例
 const server = new McpServer({
-  name: "jimeng4.0-mcp-steve",
+  name: "jimeng4-mcp",
   version: "1.0.0",
 });
 
@@ -71,18 +58,6 @@ server.resource(
     contents: [{
       uri: uri.href,
       text: `火山引擎即梦AI多模态生成服务 (MCP)\n\n版本: 1.0.4\n状态: ${JIMENG_ACCESS_KEY && JIMENG_SECRET_KEY ? "已配置密钥" : "未配置密钥"}`
-    }]
-  })
-);
-
-// 添加图像生成帮助文档资源
-server.resource(
-  "help",
-  "help://generate-image",
-  async (uri) => ({
-    contents: [{
-      uri: uri.href,
-      text: `# generate-image 工具使用帮助\n\n生成图像的工具，可以根据文字、插图元素和颜色生成图像。\n\n## 参数\n\n- text: 用户需要在图片上显示的文字\n- illustration: 根据用户要显示的文字，提取3-5个可以作为图片配饰的插画元素关键词\n- color: 图片的背景主色调\n- ratio: 图片比例。支持: 4:3 (512*384), 3:4 (384*512), 16:9 (512*288), 9:16 (288*512)\n\n## 示例\n\n请使用generate-image工具生成一张图片，图片上显示"创新未来"文字，配饰元素包括科技、星空、光线，背景色调为蓝色，比例为16:9。`
     }]
   })
 );
@@ -113,152 +88,6 @@ server.resource(
   })
 );
 */
-
-
-// 注册图片生成工具
-server.tool(
-  "generate-image",
-  "当用户需要生成图片时使用的工具",
-  {
-    text: z.string().describe("用户需要在图片上显示的文字"),
-    illustration: z.string().describe("根据用户要显示的文字，提取3-5个可以作为图片配饰的插画元素关键词"),
-    color: z.string().describe("图片的背景主色调"),
-    ratio: z.enum(["4:3", "3:4", "16:9", "9:16"]).describe("图片比例。支持: 4:3 (512*384), 3:4 (384*512), 16:9 (512*288), 9:16 (288*512)")
-  },
-  async (args, _extra) => {
-    const { text, illustration, color, ratio } = args;
-    const imageSize = RATIO_MAPPING[ratio];
-
-    if (!imageSize) {
-      // 构建标准JSON格式的错误返回数据
-      const errorData = {
-        status: "error",
-        message: "不支持的图片比例",
-        error: `不支持的比例: ${ratio}`,
-        supported_ratios: ["4:3", "3:4", "16:9", "9:16"],
-        timestamp: new Date().toISOString()
-      };
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(errorData, null, 2)
-          }
-        ],
-        isError: true
-      };
-    }
-
-    // 检查API密钥是否配置
-    if (!JIMENG_ACCESS_KEY || !JIMENG_SECRET_KEY) {
-      // 构建标准JSON格式的错误返回数据
-      const errorData = {
-        status: "error",
-        message: "API密钥未配置",
-        error: "未设置环境变量 JIMENG_ACCESS_KEY 和 JIMENG_SECRET_KEY",
-        help: "请参考文档配置环境变量",
-        timestamp: new Date().toISOString()
-      };
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(errorData, null, 2)
-          }
-        ],
-        isError: true
-      };
-    }
-
-    try {
-      // 创建即梦AI客户端
-      const client = new JimengClient({
-        debug: false // 设置为true可以查看详细日志
-      });
-
-      // 生成组合后的prompt
-      const prompt = generatePrompt(text, illustration, color);
-
-      // 调用即梦AI生成图像
-      const result = await client.generateImage({
-        prompt: prompt,
-        width: imageSize.width,
-        height: imageSize.height,
-        region: "cn-north-1"
-      });
-
-      if (!result.success || !result.image_urls || result.image_urls.length === 0) {
-        // 构建标准JSON格式的失败返回数据
-        const failureData = {
-          status: "error",
-          message: "生成图片失败",
-          error: result.error || "未知错误",
-          timestamp: new Date().toISOString()
-        };
-
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify(failureData, null, 2)
-            }
-          ],
-          isError: true
-        };
-      }
-
-      // 获取LLM优化后的提示词
-      const llmPrompt = result.raw_response?.data?.rephraser_result || prompt;
-
-      // 构建符合MCP标准的返回数据，包含JSON格式的结果
-      const responseData = {
-        status: "success",
-        message: "图片生成成功",
-        data: {
-          text,
-          illustration,
-          color,
-          ratio,
-          dimensions: `${imageSize.width}×${imageSize.height}`,
-          prompt,
-          llm_prompt: llmPrompt,
-          image_url: result.image_urls[0],
-          image_urls: result.image_urls
-        },
-        timestamp: new Date().toISOString()
-      };
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(responseData, null, 2)
-          }
-        ]
-      };
-    } catch (error) {
-      // 构建标准JSON格式的错误返回数据
-      const errorData = {
-        status: "error",
-        message: "生成图片时发生错误",
-        error: error instanceof Error ? error.message : String(error),
-        timestamp: new Date().toISOString()
-      };
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(errorData, null, 2)
-          }
-        ],
-        isError: true
-      };
-    }
-  }
-);
 
 // 视频生成工具已暂时注释（由于MCP协议超时限制，需要后续优化）
 /*
@@ -801,10 +630,10 @@ server.tool(
 
 // ==================== 即梦AI新版模型工具 ====================
 
-// 注册即梦4.0图片生成工具
+// 注册即梦4.0图片生成工具（默认生图工具）
 server.tool(
   "jimeng-v40-generate",
-  "即梦4.0图片生成工具，支持文生图、图像编辑及多图组合生成（最多10张输入图，最多15张输出图），支持4K超高清输出。此工具会等待图片生成完成后返回结果。",
+  "当用户需要生成图片时使用的工具 - 即梦4.0图片生成工具，支持文生图、图像编辑及多图组合生成（最多10张输入图，最多15张输出图），支持4K超高清输出。此工具会等待图片生成完成后返回结果。",
   {
     prompt: z.string().describe("生成图像的提示词，中英文均可，最长800字符"),
     image_urls: z.array(z.string()).optional().describe("输入图片URL数组，最多10张，支持JPEG/PNG格式，最大15MB"),
@@ -1295,7 +1124,7 @@ async function main() {
     process.env.DOTENV_DEBUG = "false";
 
     // 开始记录到stderr
-    console.log(`即梦AI MCP服务器 v1.0.0 (jimeng4.0-mcp-steve) 正在启动...`);
+    console.log(`即梦AI MCP服务器 v1.0.0 (jimeng4-mcp) 正在启动...`);
     console.log(`运行环境: Node.js ${process.version}`);
     console.log(`授权状态: ${JIMENG_ACCESS_KEY && JIMENG_SECRET_KEY ? "已配置" : "未配置"}`);
 
