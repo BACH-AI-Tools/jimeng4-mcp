@@ -106,6 +106,7 @@ export declare class JimengClient {
     private debug;
     private timeout;
     private retries;
+    private sleep;
     /**
      * 创建即梦AI客户端实例
      */
@@ -138,6 +139,11 @@ export declare class JimengClient {
         task_id: string;
         req_json?: string;
     }): Promise<ApiResponse>;
+    /**
+     * 以较低资源占用的方式等待异步任务完成。
+     * 首次查询延后执行，后续使用退避轮询，减少无效请求。
+     */
+    private waitForImageTaskResult;
     /**
      * 即梦4.0图片生成 - 提交任务
      */

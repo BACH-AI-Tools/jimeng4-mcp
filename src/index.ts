@@ -114,6 +114,18 @@ export interface ApiResponse {
     data?: any;
 }
 
+interface AsyncPollingOptions {
+    reqKey: string;
+    taskId: string;
+    successMessage: string;
+    failureMessage: string;
+    timeoutMessage: string;
+    initialDelayMs?: number;
+    maxDelayMs?: number;
+    backoffFactor?: number;
+    maxWaitMs?: number;
+}
+
 /**
  * 即梦AI客户端
  * 使用火山引擎V4签名算法实现
@@ -128,6 +140,10 @@ export class JimengClient {
     private debug: boolean;
     private timeout: number;
     private retries: number;
+
+    private sleep(ms: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
 
     /**
      * 创建即梦AI客户端实例
@@ -553,6 +569,80 @@ export class JimengClient {
     }
 
     /**
+     * 以较低资源占用的方式等待异步任务完成。
+     * 首次查询延后执行，后续使用退避轮询，减少无效请求。
+     */
+    private async waitForImageTaskResult(options: AsyncPollingOptions): Promise<ApiResponse> {
+        const initialDelayMs = options.initialDelayMs ?? 8000;
+        const maxDelayMs = options.maxDelayMs ?? 20000;
+        const backoffFactor = options.backoffFactor ?? 1.5;
+        const maxWaitMs = options.maxWaitMs ?? 6 * 60 * 1000;
+
+        const startedAt = Date.now();
+        let delayMs = initialDelayMs;
+        let attempt = 0;
+
+        debugLog(`任务 ${options.taskId} 已提交，${initialDelayMs / 1000} 秒后开始首次查询`);
+        await this.sleep(initialDelayMs);
+
+        while (Date.now() - startedAt < maxWaitMs) {
+            attempt++;
+            debugLog(`查询任务结果，第 ${attempt} 次，任务ID: ${options.taskId}`);
+
+            const result = await this.queryAsyncTask({
+                req_key: options.reqKey,
+                task_id: options.taskId,
+                req_json: JSON.stringify({ return_url: true })
+            });
+
+            if (result.success) {
+                if (result.status === 'SUCCEEDED' && result.data) {
+                    const imageUrls = result.data.image_urls || [];
+                    if (imageUrls.length > 0) {
+                        debugLog(options.successMessage);
+                        return {
+                            success: true,
+                            image_urls: imageUrls,
+                            raw_response: result.raw_response,
+                            task_id: options.taskId
+                        };
+                    }
+                }
+
+                if (result.status === 'FAILED') {
+                    return {
+                        success: false,
+                        error: result.error || options.failureMessage,
+                        raw_response: result.raw_response,
+                        task_id: options.taskId
+                    };
+                }
+
+                debugLog(`任务仍在进行中，状态: ${result.status}`);
+            } else {
+                debugLog(`查询任务结果失败: ${result.error || '未知错误'}`);
+            }
+
+            const elapsedMs = Date.now() - startedAt;
+            const remainingMs = maxWaitMs - elapsedMs;
+            if (remainingMs <= 0) {
+                break;
+            }
+
+            delayMs = Math.min(maxDelayMs, Math.round(delayMs * backoffFactor));
+            const waitMs = Math.min(delayMs, remainingMs);
+            debugLog(`等待 ${Math.round(waitMs / 1000)} 秒后重试...`);
+            await this.sleep(waitMs);
+        }
+
+        return {
+            success: false,
+            error: options.timeoutMessage,
+            task_id: options.taskId
+        };
+    }
+
+    /**
      * 即梦4.0图片生成 - 提交任务
      */
     async submitJimengV40Task(params: JimengV40Params): Promise<ApiResponse> {
@@ -629,62 +719,13 @@ export class JimengClient {
             };
         }
 
-        debugLog(`任务提交成功，任务ID: ${taskResult.task_id}`);
-        debugLog('开始轮询任务结果...');
-
-        // 轮询查询任务结果
-        const maxAttempts = 60; // 最多等待60次（5分钟）
-        const pollingInterval = 5000; // 5秒轮询一次
-
-        for (let i = 0; i < maxAttempts; i++) {
-            debugLog(`轮询任务结果 (${i + 1}/${maxAttempts})...`);
-
-            // 查询任务结果
-            const result = await this.queryAsyncTask({
-                req_key: 'jimeng_t2i_v40',
-                task_id: taskResult.task_id,
-                req_json: JSON.stringify({ return_url: true })
-            });
-
-            if (result.success) {
-                // 根据任务状态处理
-                if (result.status === 'SUCCEEDED' && result.data) {
-                    const imageUrls = result.data.image_urls || [];
-                    if (imageUrls.length > 0) {
-                        debugLog('图片生成成功!');
-                        return {
-                            success: true,
-                            image_urls: imageUrls,
-                            raw_response: result.raw_response,
-                            task_id: taskResult.task_id
-                        };
-                    }
-                } else if (result.status === 'FAILED') {
-                    return {
-                        success: false,
-                        error: result.error || '图片生成任务失败',
-                        raw_response: result.raw_response,
-                        task_id: taskResult.task_id
-                    };
-                } else if (result.status === 'PENDING' || result.status === 'RUNNING') {
-                    debugLog(`任务仍在进行中，状态: ${result.status}，等待 ${pollingInterval / 1000} 秒后重试...`);
-                    // 任务仍在进行中，继续等待
-                    await new Promise(resolve => setTimeout(resolve, pollingInterval));
-                    continue;
-                }
-            }
-
-            // 查询失败或状态异常，等待后重试
-            debugLog('查询任务结果失败或状态异常，等待后重试...');
-            await new Promise(resolve => setTimeout(resolve, pollingInterval));
-        }
-
-        // 超过最大尝试次数
-        return {
-            success: false,
-            error: '轮询任务结果超时，图片生成可能仍在进行中',
-            task_id: taskResult.task_id
-        };
+        return this.waitForImageTaskResult({
+            reqKey: 'jimeng_t2i_v40',
+            taskId: taskResult.task_id,
+            successMessage: '图片生成成功!',
+            failureMessage: '图片生成任务失败',
+            timeoutMessage: '轮询任务结果超时，图片生成可能仍在进行中'
+        });
     }
 
     /**
@@ -1492,4 +1533,3 @@ export class JimengClient {
 export function verifyKeys(keys: string[], required: string[]): string[] {
     return required.filter(key => !keys.includes(key));
 }
-

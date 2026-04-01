@@ -1,7 +1,7 @@
 {
   "name": "jimeng4-mcp",
   "version": "1.0.9",
-  "description": "火山引擎即梦AI多模态生成服务MCP工具 - 完整支持4.0/3.1/3.0所有最新模型",
+  "description": "火山引擎即梦AI图片生成MCP工具 - 专注即梦4.0图片生成",
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "bin": {
@@ -20,8 +20,7 @@
     "volcengine",
     "ai",
     "image-generation",
-    "video-generation",
-    "multimodal",
+    "text-to-image",
     "api-client",
     "mcp"
   ],
