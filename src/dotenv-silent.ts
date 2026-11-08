@@ -9,8 +9,11 @@ import * as path from 'path';
 
 /**
  * 从文件加载环境变量
+ *
+ * 与 dotenv 一致：默认不覆盖已存在的环境变量（例如 MCP 客户端通过 env 传入的密钥），
+ * 传入 override: true 时才用文件中的值覆盖。
  */
-export function config(options: { path?: string; debug?: boolean } = {}): { parsed: Record<string, string> | null } {
+export function config(options: { path?: string; debug?: boolean; override?: boolean } = {}): { parsed: Record<string, string> | null } {
   try {
     // 获取文件路径
     const filePath = options.path || path.resolve(process.cwd(), '.env');
@@ -35,7 +38,8 @@ export function config(options: { path?: string; debug?: boolean } = {}): { pars
       // 解析键值对
       const keyValue = trimmedLine.split('=');
       if (keyValue.length >= 2) {
-        const key = keyValue[0].trim();
+        // 兼容 shell 风格的 "export KEY=value"
+        const key = keyValue[0].trim().replace(/^export\s+/, '');
         let value = keyValue.slice(1).join('=').trim();
         
         // 移除引号
@@ -45,8 +49,10 @@ export function config(options: { path?: string; debug?: boolean } = {}): { pars
           value = value.substring(1, value.length - 1);
         }
 
-        // 设置环境变量
-        process.env[key] = value;
+        // 设置环境变量（已存在的变量默认保留）
+        if (options.override || !Object.prototype.hasOwnProperty.call(process.env, key)) {
+          process.env[key] = value;
+        }
         result[key] = value;
       }
     });
