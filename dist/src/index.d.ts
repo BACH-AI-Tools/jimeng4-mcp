@@ -182,8 +182,9 @@ export declare class JimengClient {
     submitVideoTask(params: GenerateVideoParams): Promise<ApiResponse>;
     /**
      * 查询视频生成任务结果
+     * @param region 签名使用的区域，不传则使用客户端配置的 region（默认 cn-north-1）
      */
-    getVideoTaskResult(taskId: string, reqKey?: string): Promise<ApiResponse>;
+    getVideoTaskResult(taskId: string, reqKey?: string, region?: string): Promise<ApiResponse>;
     /**
      * 生成视频 - 文生视频 (同步方式，内部轮询)
      */
