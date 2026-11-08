@@ -33,6 +33,10 @@
 - 后续查询使用退避策略，逐步拉长间隔
 - 相比固定 5 秒轮询，可显著减少空查询请求和服务端压力
 
+## 环境要求
+
+- Node.js 18 及以上（`@modelcontextprotocol/sdk` 要求 Node.js >= 18，`package.json` 的 `engines` 已同步声明）
+
 ## 环境变量
 
 使用前需要配置：
