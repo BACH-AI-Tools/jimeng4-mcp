@@ -147,23 +147,19 @@ esac
 echo_info "更新版本..."
 if [[ "$VERSION_TYPE" == "4" || "$VERSION_TYPE" == "5" ]]; then
   echo_info "使用自定义版本号: $CUSTOM_VERSION"
-  npm version "$CUSTOM_VERSION" --no-git-tag-version
+  npm version "$CUSTOM_VERSION" --no-git-tag-version || { echo_error "更新版本失败"; exit 1; }
 else
   echo_info "使用npm version命令升级版本类型: $UPDATE_TYPE"
-  npm version $UPDATE_TYPE --no-git-tag-version
+  npm version $UPDATE_TYPE --no-git-tag-version || { echo_error "更新版本失败"; exit 1; }
 fi
 
 # 获取新版本
 NEW_VERSION=$(node -p "require('./package.json').version")
 echo_info "版本已更新: $CURRENT_VERSION -> $NEW_VERSION"
 
-# 同步 mcp.json 中的版本
-echo_info "更新 mcp.json 中的版本..."
-sed -i '' "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEW_VERSION\"/" mcp.json
-
-# 同步 mcp-server.ts 中的版本
-echo_info "更新 mcp-server.ts 中的版本..."
-sed -i '' "s/version: \"[^\"]*\"/version: \"$NEW_VERSION\"/" examples/mcp-server.ts
+# 同步 mcp.json 和 mcp-server.ts 中的版本（用 node 处理，兼容 macOS 与 Linux）
+echo_info "同步 mcp.json 和 examples/mcp-server.ts 中的版本..."
+node scripts/sync-version.js || { echo_error "版本同步失败，已中止发布"; exit 1; }
 
 # 更新 README.md 中的版本信息
 echo_info "检查 README.md 中的版本..."
@@ -188,13 +184,14 @@ if [ -n "$VERSION_IN_README" ]; then
 "
   fi
   
-  sed -i '' "${VERSION_IN_README}i\\
-$VERSION_NOTES" README.md
+  # -i.bak 写法同时兼容 BSD sed（macOS）和 GNU sed（Linux）
+  sed -i.bak "${VERSION_IN_README}i\\
+$VERSION_NOTES" README.md && rm -f README.md.bak
 fi
 
 # 构建项目
 echo_info "构建项目..."
-npm run build
+npm run build || { echo_error "构建失败，已中止发布"; exit 1; }
 
 # 询问是否确认发布
 echo
@@ -208,7 +205,7 @@ else
   NPM_TAG=""
 fi
 echo "- 发布到: npm 公共仓库"
-echo "- 包名: jimeng-ai-mcp"
+echo "- 包名: $(node -p "require('./package.json').name")"
 echo
 
 read -p "确认发布? (y/n) " -n 1 -r

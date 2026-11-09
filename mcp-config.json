@@ -5,7 +5,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "jimeng4.0-mcp-steve"
+        "jimeng4-mcp"
       ],
       "env": {
         "JIMENG_ACCESS_KEY": "你的火山引擎访问密钥",
