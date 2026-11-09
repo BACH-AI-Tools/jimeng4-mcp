@@ -1,0 +1,17 @@
+# Dependencies (installed from package-lock.json with `npm ci`)
+node_modules/
+
+# Build output (`npm run build`; prepublishOnly rebuilds it before every publish)
+dist/
+
+# Local environment / credentials
+.env
+.env.*
+
+# Logs, test output, OS files
+*.log
+npm-debug.log*
+coverage/
+*.tgz
+.DS_Store
+Thumbs.db
