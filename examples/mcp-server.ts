@@ -15,12 +15,11 @@ const log = (...args: any[]) => {
 
 // 用更简单的方法处理dotenv问题 - 预先加载环境变量
 try {
-  // 首先尝试从当前目录加载.env文件
-  const envResult = dotenvSilent.config();
+  // 首先尝试从当前目录加载.env文件（不会覆盖 MCP 客户端已传入的环境变量）
+  dotenvSilent.config();
 
-  // 如果环境变量未设置，尝试从用户主目录加载
-  if ((!envResult || !envResult.parsed || Object.keys(envResult.parsed).length === 0) &&
-    (!process.env.JIMENG_ACCESS_KEY || !process.env.JIMENG_SECRET_KEY)) {
+  // 如果密钥仍未设置（无论当前目录 .env 是否存在），尝试从用户主目录加载
+  if (!process.env.JIMENG_ACCESS_KEY || !process.env.JIMENG_SECRET_KEY) {
     const homeEnvPath = path.join(process.env.HOME || process.env.USERPROFILE || "", ".jimeng-ai-mcp", ".env");
     if (fs.existsSync(homeEnvPath)) {
       dotenvSilent.config({ path: homeEnvPath });
