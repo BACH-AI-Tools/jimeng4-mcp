@@ -35,6 +35,9 @@ const ENDPOINT = "https://visual.volcengineapi.com";
 const HOST = "visual.volcengineapi.com";
 const SERVICE = "cv";
 
+// 服务器版本号（发布时由 scripts/sync-version.js 与 package.json 同步）
+const SERVER_VERSION = "1.0.9";
+
 // 环境变量配置
 const JIMENG_ACCESS_KEY = process.env.JIMENG_ACCESS_KEY;
 const JIMENG_SECRET_KEY = process.env.JIMENG_SECRET_KEY;
@@ -47,7 +50,7 @@ if (!JIMENG_ACCESS_KEY || !JIMENG_SECRET_KEY) {
 // 创建MCP服务器实例
 const server = new McpServer({
   name: "jimeng4-mcp",
-  version: "1.0.0",
+  version: SERVER_VERSION,
 });
 
 // 添加服务器信息资源
@@ -57,7 +60,7 @@ server.resource(
   async (uri) => ({
     contents: [{
       uri: uri.href,
-      text: `火山引擎即梦AI多模态生成服务 (MCP)\n\n版本: 1.0.4\n状态: ${JIMENG_ACCESS_KEY && JIMENG_SECRET_KEY ? "已配置密钥" : "未配置密钥"}`
+      text: `火山引擎即梦AI多模态生成服务 (MCP)\n\n版本: ${SERVER_VERSION}\n状态: ${JIMENG_ACCESS_KEY && JIMENG_SECRET_KEY ? "已配置密钥" : "未配置密钥"}`
     }]
   })
 );
@@ -876,7 +879,7 @@ async function main() {
     process.env.DOTENV_DEBUG = "false";
 
     // 开始记录到stderr
-    console.log(`即梦AI MCP服务器 v1.0.0 (jimeng4-mcp) 正在启动...`);
+    console.log(`即梦AI MCP服务器 v${SERVER_VERSION} (jimeng4-mcp) 正在启动...`);
     console.log(`运行环境: Node.js ${process.version}`);
     console.log(`授权状态: ${JIMENG_ACCESS_KEY && JIMENG_SECRET_KEY ? "已配置" : "未配置"}`);
 
