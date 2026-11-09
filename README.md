@@ -2,6 +2,8 @@
 
 一个精简版的即梦 MCP 服务，只保留 `jimeng-v40-generate` 这一个能力。
 
+> **来源：** 本项目基于 [freeleepm/jimeng-ai-mcp](https://github.com/freeleepm/jimeng-ai-mcp)（MIT 许可）修改而来，在其基础上做了精简和改名。原版权声明「Copyright (c) 2025 Jimeng AI」保留在 [LICENSE](LICENSE) 中。
+
 ## 当前能力
 
 ### `jimeng-v40-generate`
@@ -71,3 +73,8 @@ npm install
 npm run build
 npm run dev
 ```
+
+## 致谢与许可
+
+- 原始项目：[freeleepm/jimeng-ai-mcp](https://github.com/freeleepm/jimeng-ai-mcp)，MIT License，Copyright (c) 2025 Jimeng AI。
+- 本项目同样以 MIT 许可发布，详见 [LICENSE](LICENSE)。
