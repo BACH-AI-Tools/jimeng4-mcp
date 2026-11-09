@@ -414,8 +414,7 @@ class JimengClient {
                 task_id: options.taskId,
                 req_json: JSON.stringify({ return_url: true })
             });
-            // 审核未通过等终态错误会以 success: false + status: 'FAILED' 返回，不能当作临时失败继续重试
-            if (result.success || result.status === 'FAILED') {
+            if (result.success) {
                 if (result.status === 'SUCCEEDED' && result.data) {
                     const imageUrls = result.data.image_urls || [];
                     if (imageUrls.length > 0) {
@@ -575,8 +574,7 @@ class JimengClient {
                 task_id: taskResult.task_id,
                 req_json: JSON.stringify({ return_url: true })
             });
-            // 审核未通过等终态错误会以 success: false + status: 'FAILED' 返回，不能当作临时失败继续重试
-            if (result.success || result.status === 'FAILED') {
+            if (result.success) {
                 // 根据任务状态处理
                 if (result.status === 'SUCCEEDED' && result.data) {
                     const imageUrls = result.data.image_urls || [];
@@ -652,8 +650,7 @@ class JimengClient {
                 task_id: taskResult.task_id,
                 req_json: JSON.stringify({ return_url: true })
             });
-            // 审核未通过等终态错误会以 success: false + status: 'FAILED' 返回，不能当作临时失败继续重试
-            if (result.success || result.status === 'FAILED') {
+            if (result.success) {
                 // 根据任务状态处理
                 if (result.status === 'SUCCEEDED' && result.data) {
                     const imageUrls = result.data.image_urls || [];
@@ -729,8 +726,7 @@ class JimengClient {
                 task_id: taskResult.task_id,
                 req_json: JSON.stringify({ return_url: true })
             });
-            // 审核未通过等终态错误会以 success: false + status: 'FAILED' 返回，不能当作临时失败继续重试
-            if (result.success || result.status === 'FAILED') {
+            if (result.success) {
                 // 根据任务状态处理
                 if (result.status === 'SUCCEEDED' && result.data) {
                     const imageUrls = result.data.image_urls || [];
@@ -878,8 +874,9 @@ class JimengClient {
     }
     /**
      * 查询视频生成任务结果
+     * @param region 签名使用的区域，不传则使用客户端配置的 region（默认 cn-north-1）
      */
-    async getVideoTaskResult(taskId, reqKey = "jimeng_vgfm_t2v_l20") {
+    async getVideoTaskResult(taskId, reqKey = "jimeng_vgfm_t2v_l20", region) {
         let lastError = null;
         const retries = 1; // 只重试一次
         let retryCount = 0;
@@ -900,8 +897,7 @@ class JimengClient {
                 // 总是开启调试信息以便排查问题
                 debugLog('查询结果请求体:', formattedBody);
                 // 生成签名和请求头
-                const { headers, requestUrl } = this.signV4Request(formattedQuery, formattedBody, reqKey.split('_')[2] // 提取region
-                );
+                const { headers, requestUrl } = this.signV4Request(formattedQuery, formattedBody, region);
                 // 开启调试信息
                 debugLog('查询结果请求URL:', requestUrl);
                 debugLog('查询结果请求头:', headers);
@@ -1032,9 +1028,8 @@ class JimengClient {
         for (let i = 0; i < maxAttempts; i++) {
             debugLog(`轮询任务结果 (${i + 1}/${maxAttempts})...`);
             // 查询任务结果
-            const result = await this.getVideoTaskResult(taskResult.task_id, params.req_key);
-            // 审核未通过等终态错误会以 success: false + status: 'FAILED' 返回，不能当作临时失败继续重试
-            if (result.success || result.status === 'FAILED') {
+            const result = await this.getVideoTaskResult(taskResult.task_id, params.req_key, params.region);
+            if (result.success) {
                 // 根据任务状态处理
                 if ((result.status === 'SUCCEEDED' || result.status === 'done') && result.video_urls && result.video_urls.length > 0) {
                     debugLog('视频生成成功!');
@@ -1048,7 +1043,7 @@ class JimengClient {
                 else if (result.status === 'FAILED') {
                     return {
                         success: false,
-                        error: result.error || '视频生成任务失败',
+                        error: '视频生成任务失败',
                         raw_response: result.raw_response,
                         task_id: taskResult.task_id
                     };
@@ -1205,9 +1200,8 @@ class JimengClient {
         for (let i = 0; i < maxAttempts; i++) {
             debugLog(`轮询任务结果 (${i + 1}/${maxAttempts})...`);
             // 查询任务结果
-            const result = await this.getVideoTaskResult(taskResult.task_id, params.req_key || "jimeng_vgfm_i2v_l20");
-            // 审核未通过等终态错误会以 success: false + status: 'FAILED' 返回，不能当作临时失败继续重试
-            if (result.success || result.status === 'FAILED') {
+            const result = await this.getVideoTaskResult(taskResult.task_id, params.req_key || "jimeng_vgfm_i2v_l20", params.region);
+            if (result.success) {
                 // 根据任务状态处理
                 if ((result.status === 'SUCCEEDED' || result.status === 'done') && result.video_urls && result.video_urls.length > 0) {
                     debugLog('视频生成成功!');
@@ -1221,7 +1215,7 @@ class JimengClient {
                 else if (result.status === 'FAILED') {
                     return {
                         success: false,
-                        error: result.error || '视频生成任务失败',
+                        error: '视频生成任务失败',
                         raw_response: result.raw_response,
                         task_id: taskResult.task_id
                     };

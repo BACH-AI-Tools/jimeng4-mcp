@@ -2,6 +2,8 @@
 
 一个精简版的即梦 MCP 服务，只保留 `jimeng-v40-generate` 这一个能力。
 
+> **来源：** 本项目基于 [freeleepm/jimeng-ai-mcp](https://github.com/freeleepm/jimeng-ai-mcp)（MIT 许可）修改而来，在其基础上做了精简和改名。原版权声明「Copyright (c) 2025 Jimeng AI」保留在 [LICENSE](LICENSE) 中。
+
 ## 当前能力
 
 ### `jimeng-v40-generate`
@@ -32,6 +34,10 @@
 - 提交任务后不会立刻查询，先等待首个冷启动窗口
 - 后续查询使用退避策略，逐步拉长间隔
 - 相比固定 5 秒轮询，可显著减少空查询请求和服务端压力
+
+## 环境要求
+
+- Node.js 18 及以上（`@modelcontextprotocol/sdk` 要求 Node.js >= 18，`package.json` 的 `engines` 已同步声明）
 
 ## 环境变量
 
@@ -67,3 +73,8 @@ npm install
 npm run build
 npm run dev
 ```
+
+## 致谢与许可
+
+- 原始项目：[freeleepm/jimeng-ai-mcp](https://github.com/freeleepm/jimeng-ai-mcp)，MIT License，Copyright (c) 2025 Jimeng AI。
+- 本项目同样以 MIT 许可发布，详见 [LICENSE](LICENSE)。

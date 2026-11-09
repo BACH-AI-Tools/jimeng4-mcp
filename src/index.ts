@@ -1114,8 +1114,9 @@ export class JimengClient {
 
     /**
      * 查询视频生成任务结果
+     * @param region 签名使用的区域，不传则使用客户端配置的 region（默认 cn-north-1）
      */
-    async getVideoTaskResult(taskId: string, reqKey: string = "jimeng_vgfm_t2v_l20"): Promise<ApiResponse> {
+    async getVideoTaskResult(taskId: string, reqKey: string = "jimeng_vgfm_t2v_l20", region?: string): Promise<ApiResponse> {
         let lastError: Error | null = null;
         const retries = 1; // 只重试一次
         let retryCount = 0;
@@ -1144,7 +1145,7 @@ export class JimengClient {
                 const { headers, requestUrl } = this.signV4Request(
                     formattedQuery,
                     formattedBody,
-                    reqKey.split('_')[2] // 提取region
+                    region
                 );
 
                 // 开启调试信息
@@ -1297,7 +1298,7 @@ export class JimengClient {
             debugLog(`轮询任务结果 (${i + 1}/${maxAttempts})...`);
 
             // 查询任务结果
-            const result = await this.getVideoTaskResult(taskResult.task_id, params.req_key);
+            const result = await this.getVideoTaskResult(taskResult.task_id, params.req_key, params.region);
 
             // 审核未通过等终态错误会以 success: false + status: 'FAILED' 返回，不能当作临时失败继续重试
             if (result.success || result.status === 'FAILED') {
@@ -1493,7 +1494,7 @@ export class JimengClient {
             debugLog(`轮询任务结果 (${i + 1}/${maxAttempts})...`);
 
             // 查询任务结果
-            const result = await this.getVideoTaskResult(taskResult.task_id, params.req_key || "jimeng_vgfm_i2v_l20");
+            const result = await this.getVideoTaskResult(taskResult.task_id, params.req_key || "jimeng_vgfm_i2v_l20", params.region);
 
             // 审核未通过等终态错误会以 success: false + status: 'FAILED' 返回，不能当作临时失败继续重试
             if (result.success || result.status === 'FAILED') {

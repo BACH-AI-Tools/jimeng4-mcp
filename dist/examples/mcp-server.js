@@ -50,11 +50,10 @@ const log = (...args) => {
 };
 // 用更简单的方法处理dotenv问题 - 预先加载环境变量
 try {
-    // 首先尝试从当前目录加载.env文件
-    const envResult = dotenvSilent.config();
-    // 如果环境变量未设置，尝试从用户主目录加载
-    if ((!envResult || !envResult.parsed || Object.keys(envResult.parsed).length === 0) &&
-        (!process.env.JIMENG_ACCESS_KEY || !process.env.JIMENG_SECRET_KEY)) {
+    // 首先尝试从当前目录加载.env文件（不会覆盖 MCP 客户端已传入的环境变量）
+    dotenvSilent.config();
+    // 如果密钥仍未设置（无论当前目录 .env 是否存在），尝试从用户主目录加载
+    if (!process.env.JIMENG_ACCESS_KEY || !process.env.JIMENG_SECRET_KEY) {
         const homeEnvPath = path_1.default.join(process.env.HOME || process.env.USERPROFILE || "", ".jimeng-ai-mcp", ".env");
         if (fs_1.default.existsSync(homeEnvPath)) {
             dotenvSilent.config({ path: homeEnvPath });
@@ -68,6 +67,8 @@ catch (error) {
 const ENDPOINT = "https://visual.volcengineapi.com";
 const HOST = "visual.volcengineapi.com";
 const SERVICE = "cv";
+// 服务器版本号（发布时由 scripts/sync-version.js 与 package.json 同步）
+const SERVER_VERSION = "1.0.9";
 // 环境变量配置
 const JIMENG_ACCESS_KEY = process.env.JIMENG_ACCESS_KEY;
 const JIMENG_SECRET_KEY = process.env.JIMENG_SECRET_KEY;
@@ -78,13 +79,13 @@ if (!JIMENG_ACCESS_KEY || !JIMENG_SECRET_KEY) {
 // 创建MCP服务器实例
 const server = new mcp_js_1.McpServer({
     name: "jimeng4-mcp",
-    version: "1.0.0",
+    version: SERVER_VERSION,
 });
 // 添加服务器信息资源
 server.resource("info", "info://server", async (uri) => ({
     contents: [{
             uri: uri.href,
-            text: `火山引擎即梦AI多模态生成服务 (MCP)\n\n版本: 1.0.4\n状态: ${JIMENG_ACCESS_KEY && JIMENG_SECRET_KEY ? "已配置密钥" : "未配置密钥"}`
+            text: `火山引擎即梦AI多模态生成服务 (MCP)\n\n版本: ${SERVER_VERSION}\n状态: ${JIMENG_ACCESS_KEY && JIMENG_SECRET_KEY ? "已配置密钥" : "未配置密钥"}`
         }]
 }));
 // 视频生成帮助文档已暂时注释
@@ -884,7 +885,7 @@ async function main() {
         // 确保不会有dotenv调试输出
         process.env.DOTENV_DEBUG = "false";
         // 开始记录到stderr
-        console.log(`即梦AI MCP服务器 v1.0.0 (jimeng4-mcp) 正在启动...`);
+        console.log(`即梦AI MCP服务器 v${SERVER_VERSION} (jimeng4-mcp) 正在启动...`);
         console.log(`运行环境: Node.js ${process.version}`);
         console.log(`授权状态: ${JIMENG_ACCESS_KEY && JIMENG_SECRET_KEY ? "已配置" : "未配置"}`);
         // 添加stdio传输层
