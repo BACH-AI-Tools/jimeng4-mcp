@@ -13,7 +13,7 @@ Node.js 18 or newer. `package.json` declares `engines.node: ">=18.0.0"` (package
 密钥变量名是 `JIMENG_ACCESS_KEY` 和 `JIMENG_SECRET_KEY`（src/index.ts:152-153）。按三步排查：
 
 1. 变量名是否拼写正确（注意是 `JIMENG`，不是 `JIMENG4`）。
-2. 进程能否读到：MCP 客户端 `env` 配置、当前目录 `.env`，或 `~/.jimeng-ai-mcp/.env`（加载顺序见 examples/mcp-server.ts:18-27）。
+2. 进程能否读到：MCP 客户端 `env` 配置、当前目录 `.env`，或 `~/.jimeng-ai-mcp/.env`（历史遗留路径，沿用上游包名以兼容老用户；加载顺序见 examples/mcp-server.ts:18-27）。
 3. `.env` 写法：项目已兼容 `export KEY=value` 前缀（src/dotenv-silent.ts:42），但更推荐直接写 `KEY=value`。
 
 未配置时服务启动会打印警告（examples/mcp-server.ts:44-47），调用工具会返回「API密钥未配置」（examples/mcp-server.ts:652-663）。
@@ -23,7 +23,7 @@ Node.js 18 or newer. `package.json` declares `engines.node: ">=18.0.0"` (package
 The key variables are `JIMENG_ACCESS_KEY` and `JIMENG_SECRET_KEY` (src/index.ts:152-153). Troubleshoot in three steps:
 
 1. Check the variable names are spelled correctly (it's `JIMENG`, not `JIMENG4`).
-2. Make sure the process can read them: the MCP client `env` block, a `.env` in the current directory, or `~/.jimeng-ai-mcp/.env` (load order at examples/mcp-server.ts:18-27).
+2. Make sure the process can read them: the MCP client `env` block, a `.env` in the current directory, or `~/.jimeng-ai-mcp/.env` (a legacy path kept from the upstream package name for backward compatibility; load order at examples/mcp-server.ts:18-27).
 3. In `.env`, the `export KEY=value` prefix is now supported (src/dotenv-silent.ts:42), but plain `KEY=value` is recommended.
 
 When keys are missing, the server logs a warning at startup (examples/mcp-server.ts:44-47) and tool calls return "API密钥未配置" (examples/mcp-server.ts:652-663).
@@ -70,11 +70,11 @@ The image path is fixed: moderation error codes [50411, 50511, 50412, 50512, 504
 
 ## 8. `.env` 会覆盖 MCP 客户端传入的密钥吗？
 
-不会。默认情况下 `.env` 不会覆盖进程里已有的环境变量（src/dotenv-silent.ts:53），只有显式传 `override: true` 才会覆盖。加载顺序：先读当前目录 `.env`，密钥仍缺失时再读 `~/.jimeng-ai-mcp/.env`（examples/mcp-server.ts:18-27）。
+不会。默认情况下 `.env` 不会覆盖进程里已有的环境变量（src/dotenv-silent.ts:53），只有显式传 `override: true` 才会覆盖。加载顺序：先读当前目录 `.env`，密钥仍缺失时再读 `~/.jimeng-ai-mcp/.env`（历史遗留路径，沿用上游包名以兼容老用户；examples/mcp-server.ts:18-27）。
 
 **English — Does `.env` override keys passed by the MCP client?**
 
-No. By default `.env` does not override environment variables already present (src/dotenv-silent.ts:53); only an explicit `override: true` forces it. Load order: current-directory `.env` first, then `~/.jimeng-ai-mcp/.env` if keys are still missing (examples/mcp-server.ts:18-27).
+No. By default `.env` does not override environment variables already present (src/dotenv-silent.ts:53); only an explicit `override: true` forces it. Load order: current-directory `.env` first, then `~/.jimeng-ai-mcp/.env` if keys are still missing (a legacy path kept from the upstream package name for backward compatibility; examples/mcp-server.ts:18-27).
 
 ## 9. debug 模式会打印什么？有安全风险吗？
 
